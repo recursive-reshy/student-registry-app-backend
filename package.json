@@ -1,0 +1,31 @@
+{
+  "name": "student-registry-app-backend",
+  "version": "0.1.0",
+  "description": "",
+  "homepage": "https://github.com/recursive-reshy/student-registry-app-backend#readme",
+  "bugs": {
+    "url": "https://github.com/recursive-reshy/student-registry-app-backend/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/recursive-reshy/student-registry-app-backend.git"
+  },
+  "license": "ISC",
+  "author": "Naresh Sabapathy",
+  "type": "module",
+  "main": "sever.js",
+  "scripts": {
+    "start": "node --env-file=.env dist/server.js",
+    "dev": "tsc && node --watch --env-file=.env dist/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}
