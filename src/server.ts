@@ -2,6 +2,7 @@ import express from 'express'
 
 // Middlewares
 import cors from 'cors'
+import helmet from 'helmet'
 
 // Database
 import connect from './database/index.js'
@@ -12,7 +13,8 @@ const PORT = process.env.PORT || 5000
 const app = express()
 
 // Middlewares
-app.use( cors() )
+app.use( cors() ) // Cross-Origin Resource Sharing
+app.use( helmet() ) // Security headers
 app.use( express.json() )
 
 const start = async () => {
