@@ -19,6 +19,7 @@
     "dev": "tsc && node --watch --env-file=.env dist/server.js"
   },
   "dependencies": {
+    "body-parser": "^2.2.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "mysql2": "^3.14.1"
