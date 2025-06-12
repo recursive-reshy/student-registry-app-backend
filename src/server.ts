@@ -4,7 +4,7 @@ import express from 'express'
 import cors from 'cors'
 
 // Database
-import connect from './database/connection.js'
+import connect from './database/index.js'
 
 
 // App config
