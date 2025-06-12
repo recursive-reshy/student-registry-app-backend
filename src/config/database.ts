@@ -9,6 +9,3 @@ const dbConfig: PoolOptions = {
 }
 
 export default dbConfig
-
-
-
