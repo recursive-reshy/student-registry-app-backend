@@ -15,11 +15,12 @@
   "type": "module",
   "main": "sever.js",
   "scripts": {
+    "build": "tsc && npm run copy-sql",
+    "dev": "tsc && npm run copy-sql && node --watch --env-file=.env dist/server.js",
     "start": "node --env-file=.env dist/server.js",
-    "dev": "tsc && node --watch --env-file=.env dist/server.js"
+    "copy-sql": "rm -rf dist/database/schema && cp -r src/database/schema dist/database/schema"
   },
   "dependencies": {
-    "body-parser": "^2.2.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "helmet": "^8.1.0",
