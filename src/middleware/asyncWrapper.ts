@@ -10,3 +10,5 @@ const asyncWrapper = ( callback: Function ) => {
     }
   }
 }
+
+export default asyncWrapper
