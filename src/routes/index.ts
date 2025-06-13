@@ -6,7 +6,9 @@ import students from './students.js'
 
 const router = Router()
 
+// For development purposes
 router.use( '/teachers', teachers )
-router.use( '/students', students )
+// For assessment APIs
+router.use( '/', students )
 
 export default router

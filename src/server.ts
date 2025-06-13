@@ -25,7 +25,7 @@ app.get( '/health', ( _: Request, res: Response ) => {
 } )
 
 // Routes
-app.use( `/api/v${ process.env.API_VERSION || 1 }`, router )
+app.use( '/api', router )
 
 const start = async () => {
   try {

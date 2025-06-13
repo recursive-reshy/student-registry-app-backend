@@ -5,7 +5,7 @@ import { createStudent, getAllStudents } from '../controllers/students.js'
 
 const router = Router()
 
-router.route( '/' )
+router.route( '/students' )
   .post( createStudent )
   .get( getAllStudents )
 
