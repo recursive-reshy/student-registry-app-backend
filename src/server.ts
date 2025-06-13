@@ -1,4 +1,4 @@
-import express from 'express'
+import express, { Request, Response } from 'express'
 
 // Middlewares
 import cors from 'cors'
@@ -7,6 +7,8 @@ import helmet from 'helmet'
 // Database
 import connect from './database/index.js'
 
+// Routes
+import router from './routes/index.js'
 
 // App config
 const PORT = process.env.PORT || 5000
@@ -16,6 +18,14 @@ const app = express()
 app.use( cors() ) // Cross-Origin Resource Sharing
 app.use( helmet() ) // Security headers
 app.use( express.json() )
+
+//Health check
+app.get( '/health', ( _: Request, res: Response ) => {
+  res.status( 200 ).send( 'Health check' )
+} )
+
+// Routes
+app.use( `/api/v${ process.env.API_VERSION || 1 }`, router )
 
 const start = async () => {
   try {
