@@ -2,13 +2,18 @@ import fs from 'fs/promises'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
-import mysql, { Pool, RowDataPacket, FieldPacket } from 'mysql2/promise'
+import mysql, { Pool, RowDataPacket, FieldPacket, ResultSetHeader } from 'mysql2/promise'
 
 import dbConfig from '../config/database.js'
 
 export type ConnectionStatus = 'connected' | 'disconnected' | 'connecting' | 'error'
 
-export interface QueryResult< T > {
+interface MutationResult {
+  results: ResultSetHeader
+  fields: FieldPacket[]
+}
+
+interface QueryResult< T > {
   results: T[]
   fields: FieldPacket[]
 }
@@ -16,12 +21,11 @@ export interface QueryResult< T > {
 let DBPool: Pool | null = null
 let connectionStatus: ConnectionStatus = 'disconnected'
 
-// Function to execute SQL queries
-// TODO: Check what RowDataPacket is
+// Querying Database
 const query = async < T extends RowDataPacket > ( 
   sql: string,
-  params: any [] = []
-): Promise< QueryResult< T[0] > > => {
+  params: any[] = []
+): Promise< QueryResult< T[ 0 ] > > => {
   try {
     console.log( `Executing query: ${ sql }` )
     if( !DBPool || connectionStatus != 'connected' ) {
@@ -30,8 +34,32 @@ const query = async < T extends RowDataPacket > (
 
     const [ results, fields ] = await DBPool.execute< T[] >( sql, params )
 
+    console.log( 'Query executed successfully' )
+    
     return { results, fields }
   } catch ( error ) {
+    console.error( `Error while querying the database: ${ error }` )
+    throw error
+  }
+}
+
+// Mutating Database: Insert, Update, Delete
+const mutation = async (
+  sql: string,
+  params: any[] = []
+): Promise< MutationResult > => {
+  try {
+    console.log( `Executing mutation: ${ sql }` )
+    if( !DBPool || connectionStatus != 'connected' ) {
+      throw new Error( 'Error while mutating the database: Database is not connected' )
+    }
+
+    const [ results, fields ] = await DBPool.execute< ResultSetHeader >( sql, params )
+
+    console.log( 'Mutation executed successfully' )
+
+    return { results, fields }
+  } catch (error) {
     console.error( `Error while querying the database: ${ error }` )
     throw error
   }
@@ -103,4 +131,6 @@ const connect = async () => {
 
 export default connect
 
-export { query }
+export { query, mutation }
+
+export type { QueryResult, MutationResult }
