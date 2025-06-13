@@ -5,9 +5,6 @@ import asyncWrapper from '../middleware/asyncWrapper.js'
 // Repository methods
 import { save, findAll, findByEmail } from '../repositories/teachers.js'
 
-
-
-// Create
 const createTeacher = asyncWrapper( async ( req: Request, res: Response ) => {
   const { name, email } = req.body
 
@@ -29,7 +26,6 @@ const createTeacher = asyncWrapper( async ( req: Request, res: Response ) => {
   return res.status( 201 ).json( { message: 'Teacher created successfully', id: results.insertId } )
 } )
 
-// Get all teachers
 const getAllTeachers = asyncWrapper( async ( _: Request, res: Response ) => {
   const { results } = await findAll()
 
