@@ -9,7 +9,7 @@ import dbConfig from '../config/database.js'
 export type ConnectionStatus = 'connected' | 'disconnected' | 'connecting' | 'error'
 
 export interface QueryResult< T > {
-  rows: T[]
+  results: T[]
   fields: FieldPacket[]
 }
 
@@ -29,7 +29,8 @@ const query = async < T extends RowDataPacket > (
     }
 
     const [ results, fields ] = await DBPool.execute< T[] >( sql, params )
-    return { rows: results, fields }
+
+    return { results, fields }
   } catch ( error ) {
     console.error( `Error while querying the database: ${ error }` )
     throw error
