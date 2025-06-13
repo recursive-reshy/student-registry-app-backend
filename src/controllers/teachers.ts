@@ -22,12 +22,11 @@ const createTeacher = asyncWrapper( async ( req: Request, res: Response ) => {
     return res.status( 400 ).json( { error: 'Teacher already exists' } )
   }
 
-  // Insert teacher
   const { results } = await save( { name, email } )
 
   console.log( results )
 
-  return res.status( 201 ).json( { message: 'Teacher created successfully' } )
+  return res.status( 201 ).json( { message: 'Teacher created successfully', id: results.insertId } )
 } )
 
 // Get all teachers
