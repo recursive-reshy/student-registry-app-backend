@@ -17,7 +17,7 @@
   "scripts": {
     "build": "tsc && npm run copy-sql",
     "dev": "nodemon",
-    "start": "node --env-file=.env dist/server.js",
+    "start": "node dist/server.js",
     "copy-sql": "rm -rf dist/database/schema && cp -r src/database/schema dist/database/schema",
   },
   "dependencies": {
