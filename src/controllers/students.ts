@@ -17,6 +17,8 @@ interface RegisterStudentRequestDto {
   students: string[]
 }
 
+// TODO: Add a helper fucntion to check if email is valid in util folder
+
 const createStudent = asyncWrapper( async ( req: Request< {}, {}, CreateStudentRequestDto >, res: Response ) => {
   const { name, email } = req.body
 
@@ -78,7 +80,7 @@ const registerStudents = asyncWrapper( async ( req: Request< {}, {}, RegisterStu
     }
   }
 
-  return res.status( 204 ).json( { message: 'Students registered successfully' } )
+  return res.status( 204 )
 } )
 
 export { 
