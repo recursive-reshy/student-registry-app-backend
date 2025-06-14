@@ -44,10 +44,22 @@ const findByEmail = async ( email: string ): Promise< QueryResult< Student > > =
   }
 }
 
+const findByEmails = async ( emails: string[] ): Promise< QueryResult< Student > > => {
+  try {
+    const result = await query( 'SELECT * FROM Students WHERE email IN (?)', [ emails ] )
+
+    return result
+  } catch (error) {
+    console.error( `Error while fetching students by emails from database: ${ error }` )
+    throw error
+  }
+}
+
 export { 
   save,
   findAll, 
-  findByEmail 
+  findByEmail,
+  findByEmails
 }
 
 export type { StudentDto }
