@@ -5,7 +5,12 @@ import asyncWrapper from '../middleware/asyncWrapper.js'
 // Repository methods
 import { save, findAll, findByEmail } from '../repositories/teachers.js'
 
-const createTeacher = asyncWrapper( async ( req: Request, res: Response ) => {
+interface CreateTeacherRequestDto {
+  name: string
+  email: string
+}
+
+const createTeacher = asyncWrapper( async ( req: Request< {}, {}, CreateTeacherRequestDto >, res: Response ) => {
   const { name, email } = req.body
 
   if( !name || !email ) {
