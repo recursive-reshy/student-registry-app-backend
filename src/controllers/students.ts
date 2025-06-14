@@ -3,8 +3,9 @@ import { Request, Response } from 'express'
 import asyncWrapper from '../middleware/asyncWrapper.js'
 
 // Repository methods
-import { save, findAll, findByEmail } from '../repositories/students.js'
+import { save, findAll, findByEmail, findByEmails } from '../repositories/students.js'
 import { findByEmail as findTeacherByEmail } from '../repositories/teachers.js'
+import { save as saveTeacherStudentRegistration, findByTeacherIdAndStudentId } from '../repositories/teacherStudentRegistration.js'
 
 interface CreateStudentRequestDto {
   name: string
@@ -48,18 +49,36 @@ const registerStudents = asyncWrapper( async ( req: Request< {}, {}, RegisterStu
     return res.status( 400 ).json( { error: 'Teacher email is required' } )
   }
 
-  const existingTeacher = await findTeacherByEmail( teacher )
+  const { results: existingTeacher } = await findTeacherByEmail( teacher )
 
-  if( !existingTeacher.results.length ) {
+  if( !existingTeacher.length ) {
     return res.status( 400 ).json( { error: 'Teacher does not exist' } )
   }
-
 
   if( !Array.isArray( students ) || !students.length ) {
     return res.status( 400 ).json( { error: 'Students are required' } )
   }
 
-  return res.status( 200 ).json( { message: 'Students registered successfully' } )
+  // TODO: Should check for duplicates. Maybe use set to check for duplicates
+
+  // Check if all students exists
+  const { results: existingStudents } = await findByEmails( students )
+
+  if( existingStudents.length != students.length ) {
+    const nonExistingStudents = students.filter( ( studentEmail ) => !existingStudents.some( ( { email } ) => email == studentEmail ) )
+    return res.status( 400 ).json( { error: `Students not found: ${ nonExistingStudents.join( ', ' ) }` } )
+  }
+
+  for( const student of existingStudents ) {
+    // Check if student is already registered to the teacher
+    const existingRegistration = await findByTeacherIdAndStudentId( existingTeacher[ 0 ].id, student.id )
+
+    if( !existingRegistration.results.length ) {
+      await saveTeacherStudentRegistration( { teacherId: existingTeacher[ 0 ].id, studentId: student.id } )
+    }
+  }
+
+  return res.status( 204 ).json( { message: 'Students registered successfully' } )
 } )
 
 export { 
