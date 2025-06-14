@@ -7,3 +7,4 @@ interface TeacherStudentRegistrationDto {
   studentId: number
 }
 
+export type { TeacherStudentRegistrationDto }
