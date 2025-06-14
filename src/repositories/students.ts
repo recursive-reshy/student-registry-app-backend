@@ -46,7 +46,9 @@ const findByEmail = async ( email: string ): Promise< QueryResult< Student > > =
 
 const findByEmails = async ( emails: string[] ): Promise< QueryResult< Student > > => {
   try {
-    const result = await query( 'SELECT * FROM Students WHERE email IN (?)', [ emails ] )
+    // Create placeholders for the query since we do not know the number of emails
+    const placeholders = emails.map( () => '?' ).join( ',' )
+    const result = await query( `SELECT * FROM Students WHERE email IN (${ placeholders })`, emails )
 
     return result
   } catch (error) {
