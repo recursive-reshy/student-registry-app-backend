@@ -37,8 +37,6 @@ const getAllTeachers = asyncWrapper( async ( _: Request, res: Response ) => {
   return res.status( 200 ).json( results )
 } )
 
-// Delete by email
-
 export { 
   createTeacher,
   getAllTeachers,
