@@ -72,6 +72,27 @@ const seedData = async (): Promise< void > => {
     if( connectionStatus != 'connected' ) {
       throw new Error( 'Error while seeding data into database: Database is not connected' )
     }
+
+    console.log( 'Checking if there is data in the database...' )
+    // Get all tables in database with their row count
+    const tables = await query( 
+      `SELECT 
+          table_name as table_name,
+          table_rows as row_count
+        FROM information_schema.tables 
+        WHERE table_schema = ? 
+        AND table_type = 'BASE TABLE'
+        ORDER BY table_name
+      `,
+      [ process.env.MYSQL_DATABASE ]
+    )
+
+    if( tables.results.some( ( { row_count } ) => row_count > 0 ) ) {
+      console.log( 'Database already has data, skipping seeding...' )
+      return
+    }
+
+    console.log( 'Database is empty, seeding data...' )
     
     // Read seed data file
     console.log( 'Reading seed data file...' )
