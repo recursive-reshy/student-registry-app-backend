@@ -65,6 +65,40 @@ const mutation = async (
   }
 }
 
+// Seed data to database
+const seedData = async (): Promise< void > => {
+  try {
+    console.log( 'Seeding data into database...' )
+    if( connectionStatus != 'connected' ) {
+      throw new Error( 'Error while seeding data into database: Database is not connected' )
+    }
+    
+    // Read seed data file
+    console.log( 'Reading seed data file...' )
+    const seedData = await fs.readFile(
+      path.join(
+        path.dirname( fileURLToPath( import.meta.url ) ),
+        'schema',
+        'seedData.sql'
+      ),
+      'utf8'
+    )
+
+    // Split seed data into individual queries
+    const statements = seedData.split( ';' )
+    
+    // Execute each statement
+    for( const statement of statements ) {
+      if( statement.trim() ) {
+        await mutation( statement )
+      }
+    }
+  } catch ( error ) {
+    console.error( `Error while seeding data into database: ${ error }` )
+    throw error
+  }
+}
+
 // Function to initialize the schema
 const initSchema = async (): Promise< void > => {
   try {
@@ -74,7 +108,7 @@ const initSchema = async (): Promise< void > => {
     }
 
     // Read schema file
-    console.log( 'Reading schema file...', path.join( path.dirname( fileURLToPath( import.meta.url ) ), 'schema', 'tables.sql' ) )
+    console.log( 'Reading schema file...' )
     const schema = await fs.readFile(
       path.join( 
         path.dirname( fileURLToPath( import.meta.url ) ),
@@ -91,7 +125,7 @@ const initSchema = async (): Promise< void > => {
     for( const statement of statements ) {
       // Trim the statement to remove any whitespace and ensure it's not empty
       if( statement.trim() ) {
-        await query( statement )
+        await mutation( statement )
       }
     }
   } catch ( error) { 
@@ -100,6 +134,7 @@ const initSchema = async (): Promise< void > => {
   }
 }
 
+// Connect to the database
 const connect = async () => {
   if( DBPool && connectionStatus == 'connected' ) {
     console.log( 'Database already connected' )
@@ -120,6 +155,11 @@ const connect = async () => {
     // Initialize the schema
     // TODO: Check if the schema is already initialized ( how to do this? )
     await initSchema()
+
+    // Seed data
+    if( process.env.MYSQL_SEED_DATA ) {
+      await seedData()
+    }
 
     return DBPool
   } catch ( error ) {
