@@ -29,7 +29,7 @@ const findByTeacherIdAndStudentId = async ( teacherId: number, studentId: number
   }
 }
 
-const findAllStudentEmailsByTeacherIds = async ( teacherIds: string[] ): Promise< QueryResult< string > > => {
+const findAllStudentEmailsByTeacherIds = async ( teacherIds: string[] ): Promise< QueryResult< Record< string, string > > > => {
   try {
     // Create placeholders for the query since we do not know the number of emails
     const placeholders = teacherIds.map( () => '?' ).join( ',' )
@@ -50,10 +50,28 @@ const findAllStudentEmailsByTeacherIds = async ( teacherIds: string[] ): Promise
   }
 }
 
+const findAllValidStudentEmailsByTeacherIds = async ( teacherId: number ): Promise< QueryResult< Record< string, string > > > => {
+  try {
+    const result = await query( 
+      `SELECT s.email FROM Students AS s
+       INNER JOIN TeacherStudentRegistration AS tsr ON s.id = tsr.studentId
+       WHERE tsr.teacherId = ? AND s.isSuspended = FALSE
+      `,
+      [ teacherId ]
+    )
+
+    return result
+  } catch ( error ) {
+    console.error( `Error while fetching all valid student emails by teacherIds from database: ${ error }` )
+    throw error
+  }
+}
+
 export { 
   save,
   findByTeacherIdAndStudentId,
-  findAllStudentEmailsByTeacherIds
+  findAllStudentEmailsByTeacherIds,
+  findAllValidStudentEmailsByTeacherIds
 }
 
 export type { CreateTeacherStudentRegistrationDto } 

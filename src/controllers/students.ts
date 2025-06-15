@@ -2,10 +2,20 @@ import { Request, Response } from 'express'
 
 import asyncWrapper from '../middleware/asyncWrapper.js'
 
+import { getMentionedEmails } from '../utlis/index.js'
+
 // Repository methods
 import { save, findAll, findByEmail, findByEmails, updateById } from '../repositories/students.js'
-import { findByEmail as findTeacherByEmail, findByEmails as findTeachersByEmails } from '../repositories/teachers.js'
-import { save as saveTeacherStudentRegistration, findByTeacherIdAndStudentId, findAllStudentEmailsByTeacherIds } from '../repositories/teacherStudentRegistration.js'
+import { 
+  findByEmail as findTeacherByEmail,
+  findByEmails as findTeachersByEmails 
+} from '../repositories/teachers.js'
+import { 
+  save as saveTeacherStudentRegistration,
+  findByTeacherIdAndStudentId,
+  findAllStudentEmailsByTeacherIds,
+  findAllValidStudentEmailsByTeacherIds
+} from '../repositories/teacherStudentRegistration.js'
 
 interface CreateStudentRequestDto {
   name: string
@@ -17,6 +27,11 @@ interface RegisterStudentRequestDto {
   students: string[]
 }
 
+interface RetrieveForNotificationsRequestDto {
+  teacher: string
+  notification: string
+}
+
 // TODO: Add a helper fucntion to check if email is valid in util folder
 // TODO: Add helper function to handle encoded url params
 // TODO: Make id inserted into db a uuid
@@ -25,14 +40,14 @@ const createStudent = asyncWrapper( async ( req: Request< {}, {}, CreateStudentR
   const { name, email } = req.body
 
   if( !name || !email ) {
-    return res.status( 400 ).json( { error: 'Name and email are required' } )
+    return res.status( 400 ).json( { message: 'Name and email are required' } )
   }
 
   // Check if student already exists
   const existingStudent = await findByEmail( email )
   
   if( existingStudent.results.length ) {
-    return res.status( 400 ).json( { error: 'Student already exists' } )
+    return res.status( 400 ).json( { message: 'Student already exists' } )
   }
 
   const { results } = await save( { name, email } )
@@ -51,17 +66,17 @@ const registerStudents = asyncWrapper( async ( req: Request< {}, {}, RegisterStu
   const { teacher, students } = req.body
   
   if( !teacher ) {
-    return res.status( 400 ).json( { error: 'Teacher email is required' } )
+    return res.status( 400 ).json( { message: 'Teacher email is required' } )
   }
 
   const { results: existingTeacher } = await findTeacherByEmail( teacher )
 
   if( !existingTeacher.length ) {
-    return res.status( 400 ).json( { error: 'Teacher does not exist' } )
+    return res.status( 400 ).json( { message: 'Teacher does not exist' } )
   }
 
   if( !Array.isArray( students ) || !students.length ) {
-    return res.status( 400 ).json( { error: 'Students are required' } )
+    return res.status( 400 ).json( { message: 'Students are required' } )
   }
 
   // TODO: Should check for duplicates. Maybe use set to check for duplicates
@@ -71,7 +86,7 @@ const registerStudents = asyncWrapper( async ( req: Request< {}, {}, RegisterStu
 
   if( existingStudents.length != students.length ) {
     const nonExistingStudents = students.filter( ( studentEmail ) => !existingStudents.some( ( { email } ) => email == studentEmail ) )
-    return res.status( 400 ).json( { error: `Students not found: ${ nonExistingStudents.join( ', ' ) }` } )
+    return res.status( 400 ).json( { message: `Students not found: ${ nonExistingStudents.join( ', ' ) }` } )
   }
 
   for( const student of existingStudents ) {
@@ -93,7 +108,7 @@ const getCommonStudents = asyncWrapper( async ( req: Request< {}, {}, {}, { teac
   console.log( { teacher } )
 
   if( !teacher ) {
-    return res.status( 400 ).json( { error: 'Teacher email is required' } )
+    return res.status( 400 ).json( { message: 'Teacher email is required' } )
   }
 
   // Handle both single teacher and multiple teachers
@@ -112,7 +127,7 @@ const getCommonStudents = asyncWrapper( async ( req: Request< {}, {}, {}, { teac
 
   const { results: commonStudentEmails } = await findAllStudentEmailsByTeacherIds( existingTeachers.map( ( { id } ) => String( id ) ) ) 
 
-  return res.status( 200 ).json( commonStudentEmails )
+  return res.status( 200 ).json( { students: commonStudentEmails.map( ( { email } ) => email ) } )
 } )
 
 const suspendStudentByEmail = asyncWrapper( async ( req: Request< {}, {}, { student: string } >, res: Response ) => {
@@ -133,10 +148,41 @@ const suspendStudentByEmail = asyncWrapper( async ( req: Request< {}, {}, { stud
   return res.status( 204 ).send()
 } )
 
+// Get all students that can receive a notification from a teacher
+const retrieveForNotifications = asyncWrapper( async ( req: Request< {}, {}, RetrieveForNotificationsRequestDto >, res: Response ) => {
+  const { teacher, notification } = req.body
+
+  if( !teacher || !notification ) {
+    return res.status( 400 ).json( { message: 'Teacher email and notification are required' } )
+  }
+
+  const { results: existingTeacher } = await findTeacherByEmail( teacher )
+
+  if( !existingTeacher.length ) {
+    return res.status( 400 ).json( { message: 'Teacher does not exist' } )
+  }
+
+  const { results: registeredStudentEmails } = await findAllValidStudentEmailsByTeacherIds( existingTeacher[ 0 ].id )
+
+  const allRecipients = [ ...registeredStudentEmails.map( ( { email } ) => email ) ]
+
+  if( notification.includes( '@' ) ) {
+    const mentionedEmails = getMentionedEmails( notification )
+    const { results: mentionedStudents } = await findByEmails( mentionedEmails )
+    allRecipients.push( ...mentionedStudents.filter( ( { isSuspended } ) => !isSuspended ).map( ( { email } ) => email ) )
+  }
+
+  // Remove duplicates
+  const recipients = [ ...new Set( allRecipients ) ]
+
+  return res.status( 200 ).json( recipients )
+} )
+
 export { 
   createStudent,
   getAllStudents,
   registerStudents,
   getCommonStudents,
-  suspendStudentByEmail
+  suspendStudentByEmail,
+  retrieveForNotifications
 }
