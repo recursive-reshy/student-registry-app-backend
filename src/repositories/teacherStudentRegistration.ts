@@ -29,9 +29,31 @@ const findByTeacherIdAndStudentId = async ( teacherId: number, studentId: number
   }
 }
 
+const findAllStudentEmailsByTeacherIds = async ( teacherIds: string[] ): Promise< QueryResult< string > > => {
+  try {
+    // Create placeholders for the query since we do not know the number of emails
+    const placeholders = teacherIds.map( () => '?' ).join( ',' )
+    const result = await query( 
+      `SELECT s.email FROM Students AS s
+       INNER JOIN TeacherStudentRegistration AS tsr ON s.id = tsr.studentId
+       WHERE tsr.teacherId IN (${ placeholders })
+       GROUP BY s.id
+       HAVING COUNT(DISTINCT tsr.teacherId) = ?
+      `, 
+      [ ...teacherIds, teacherIds.length ]
+    )
+
+    return result
+  } catch ( error ) {
+    console.error( `Error while fetching all student emails by teacherIds from database: ${ error }` )
+    throw error
+  }
+}
+
 export { 
   save,
-  findByTeacherIdAndStudentId
+  findByTeacherIdAndStudentId,
+  findAllStudentEmailsByTeacherIds
 }
 
 export type { CreateTeacherStudentRegistrationDto } 

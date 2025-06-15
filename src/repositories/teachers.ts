@@ -44,10 +44,23 @@ const findByEmail = async ( email: string ): Promise< QueryResult< Teacher > > =
   }
 }
 
+const findByEmails = async ( emails: string[] ): Promise< QueryResult< Teacher > > => {
+  try {
+    const placeholders = emails.map( () => '?' ).join( ',' )
+    const result = await query( `SELECT * FROM Teachers WHERE email IN (${ placeholders })`, emails )
+
+    return result
+  } catch ( error ) {
+    console.error( `Error while fetching teachers by emails from database: ${ error }` )
+    throw error
+  }
+}
+
 export { 
   save,
   findAll,
-  findByEmail 
+  findByEmail,
+  findByEmails
 }
 
 export type { TeacherDto }

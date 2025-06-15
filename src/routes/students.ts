@@ -4,7 +4,8 @@ import { Router } from 'express'
 import { 
   createStudent,
   getAllStudents,
-  registerStudents
+  registerStudents,
+  getCommonStudents
 } from '../controllers/students.js'
 
 const router = Router()
@@ -13,7 +14,7 @@ router.route( '/students' )
   .post( createStudent )
   .get( getAllStudents )
 
-router.route( '/register' )
-  .post( registerStudents ) 
+router.route( '/register' ).post( registerStudents )
+router.route( '/commonstudents' ).get( getCommonStudents )
 
 export default router
