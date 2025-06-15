@@ -3,8 +3,8 @@ import { query, mutation, MutationResult, QueryResult } from '../database/index.
 import { TeacherStudentRegistration } from '../types/index.js'
 
 interface CreateTeacherStudentRegistrationDto {
-  teacherId: number
-  studentId: number
+  teacherId: string
+  studentId: string
 }
 
 const save = async ( { teacherId, studentId }: CreateTeacherStudentRegistrationDto ): Promise< MutationResult > => {
@@ -18,7 +18,7 @@ const save = async ( { teacherId, studentId }: CreateTeacherStudentRegistrationD
   }
 }
 
-const findByTeacherIdAndStudentId = async ( teacherId: number, studentId: number ): Promise< QueryResult< TeacherStudentRegistration > > => {
+const findByTeacherIdAndStudentId = async ( teacherId: string, studentId: string ): Promise< QueryResult< TeacherStudentRegistration > > => {
   try {
     const result = await query( 'SELECT * FROM TeacherStudentRegistration WHERE teacherId = ? AND studentId = ?', [ teacherId, studentId ] )
 
@@ -50,7 +50,7 @@ const findAllStudentEmailsByTeacherIds = async ( teacherIds: string[] ): Promise
   }
 }
 
-const findAllValidStudentEmailsByTeacherIds = async ( teacherId: number ): Promise< QueryResult< Record< string, string > > > => {
+const findAllValidStudentEmailsByTeacherId = async ( teacherId: string ): Promise< QueryResult< Record< string, string > > > => {
   try {
     const result = await query( 
       `SELECT s.email FROM Students AS s
@@ -71,7 +71,7 @@ export {
   save,
   findByTeacherIdAndStudentId,
   findAllStudentEmailsByTeacherIds,
-  findAllValidStudentEmailsByTeacherIds
+  findAllValidStudentEmailsByTeacherId
 }
 
 export type { CreateTeacherStudentRegistrationDto } 

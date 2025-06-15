@@ -1,6 +1,6 @@
 // Models
 interface BaseEntity {
-  id: number
+  id: string
   createdAt: Date
   updatedAt: Date
 }
@@ -17,8 +17,8 @@ interface Student extends BaseEntity {
 }
 
 interface TeacherStudentRegistration extends BaseEntity {
-  teacherId: number
-  studentId: number
+  teacherId: string
+  studentId: string
 }
 
 export type {

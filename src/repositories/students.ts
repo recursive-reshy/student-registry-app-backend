@@ -59,7 +59,7 @@ const findByEmails = async ( emails: string[] ): Promise< QueryResult< Student >
   }
 }
 
-const updateById = async ( id: number, updates: UpdateStudentDto ): Promise< MutationResult > => {
+const updateById = async ( id: string, updates: UpdateStudentDto ): Promise< MutationResult > => {
   try {
     // Build dynamic query
     const setClause = Object.keys( updates ).map( ( key ) => `${ key } = ?` ).join( ', ' )
