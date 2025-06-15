@@ -4,12 +4,12 @@ import { query, mutation, MutationResult, QueryResult } from '../database/index.
 import { Teacher } from '../types/index.js'
 
 // DTOs
-interface TeacherDto {
+interface CreateTeacherDto {
   name: string
   email: string
 }
 
-const save = async ( teacherDto: TeacherDto ): Promise< MutationResult > => {
+const save = async ( teacherDto: CreateTeacherDto ): Promise< MutationResult > => {
   try {
     const { name, email } = teacherDto
 
@@ -63,4 +63,4 @@ export {
   findByEmails
 }
 
-export type { TeacherDto }
+export type { CreateTeacherDto }
