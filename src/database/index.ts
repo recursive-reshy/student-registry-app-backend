@@ -76,15 +76,14 @@ const seedData = async (): Promise< void > => {
     console.log( 'Checking if there is data in the database...' )
     // Get all tables in database with their row count
     const tables = await query( 
-      `SELECT 
-          table_name as table_name,
-          table_rows as row_count
-        FROM information_schema.tables 
-        WHERE table_schema = ? 
-        AND table_type = 'BASE TABLE'
+      `
+        SELECT 'teachers' as table_name, COUNT(*) as row_count FROM teachers
+        UNION ALL
+        SELECT 'students', COUNT(*) FROM students  
+        UNION ALL
+        SELECT 'teacherstudentregistration', COUNT(*) FROM teacherstudentregistration
         ORDER BY table_name
-      `,
-      [ process.env.MYSQL_DATABASE ]
+      `
     )
 
     if( tables.results.some( ( { row_count } ) => row_count > 0 ) ) {
