@@ -16,6 +16,7 @@
   "main": "sever.js",
   "scripts": {
     "build": "tsc && npm run copy-sql",
+    "test": "jest",
     "dev": "nodemon",
     "start": "node dist/server.js",
     "copy-sql": "rm -rf dist/database/schema && cp -r src/database/schema dist/database/schema"
@@ -30,8 +31,13 @@
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
+    "@types/jest": "^29.5.14",
     "@types/node": "^24.0.0",
+    "@types/supertest": "^6.0.3",
+    "jest": "^30.0.0",
     "nodemon": "^3.1.10",
+    "supertest": "^7.1.1",
+    "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3"

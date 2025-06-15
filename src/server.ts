@@ -1,7 +1,7 @@
-import 'dotenv/config'
 import express, { Request, Response } from 'express'
 
 // Middlewares
+import 'dotenv/config'
 import cors from 'cors'
 import helmet from 'helmet'
 
