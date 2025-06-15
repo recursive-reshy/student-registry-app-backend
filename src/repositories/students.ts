@@ -4,14 +4,16 @@ import { query, mutation, MutationResult, QueryResult } from '../database/index.
 import { Student } from '../types/index.js'
 
 // DTOs
-interface StudentDto {
+interface CreateStudentDto {
   name: string
   email: string
 }
 
-const save = async ( student: StudentDto ): Promise< MutationResult > => {
+type UpdateStudentDto = Partial< Omit< Student, 'id' | 'createdAt' | 'updatedAt' > >
+
+const save = async ( studentDto: CreateStudentDto ): Promise< MutationResult > => {
   try {
-    const { name, email } = student
+    const { name, email } = studentDto
 
     const result = await mutation( 'INSERT INTO Students (name, email) VALUES (?, ?)', [ name, email ] )
 
@@ -57,11 +59,26 @@ const findByEmails = async ( emails: string[] ): Promise< QueryResult< Student >
   }
 }
 
+const updateById = async ( id: number, updates: UpdateStudentDto ): Promise< MutationResult > => {
+  try {
+    // Build dynamic query
+    const setClause = Object.keys( updates ).map( ( key ) => `${ key } = ?` ).join( ', ' )
+    
+    const result = await mutation( `UPDATE Students SET ${ setClause } WHERE id = ?`, [ ...Object.values( updates ), id ] )
+
+    return result
+  } catch( error ) {
+    console.error( `Error while updating student by id from database: ${ error }` )
+    throw error
+  }
+}
+
 export { 
   save,
   findAll, 
   findByEmail,
-  findByEmails
+  findByEmails,
+  updateById
 }
 
-export type { StudentDto }
+export type { CreateStudentDto }

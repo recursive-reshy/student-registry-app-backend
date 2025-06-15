@@ -3,7 +3,7 @@ import { Request, Response } from 'express'
 import asyncWrapper from '../middleware/asyncWrapper.js'
 
 // Repository methods
-import { save, findAll, findByEmail, findByEmails } from '../repositories/students.js'
+import { save, findAll, findByEmail, findByEmails, updateById } from '../repositories/students.js'
 import { findByEmail as findTeacherByEmail, findByEmails as findTeachersByEmails } from '../repositories/teachers.js'
 import { save as saveTeacherStudentRegistration, findByTeacherIdAndStudentId, findAllStudentEmailsByTeacherIds } from '../repositories/teacherStudentRegistration.js'
 
@@ -19,6 +19,7 @@ interface RegisterStudentRequestDto {
 
 // TODO: Add a helper fucntion to check if email is valid in util folder
 // TODO: Add helper function to handle encoded url params
+// TODO: Make id inserted into db a uuid
 
 const createStudent = asyncWrapper( async ( req: Request< {}, {}, CreateStudentRequestDto >, res: Response ) => {
   const { name, email } = req.body
@@ -114,9 +115,28 @@ const getCommonStudents = asyncWrapper( async ( req: Request< {}, {}, {}, { teac
   return res.status( 200 ).json( commonStudentEmails )
 } )
 
+const suspendStudentByEmail = asyncWrapper( async ( req: Request< {}, {}, { student: string } >, res: Response ) => {
+  const { student } = req.body
+
+  if( !student ) {
+    return res.status( 400 ).json( { error: 'Student email is required' } )
+  }
+
+  const { results: existingStudent } = await findByEmail( student )
+
+  if( !existingStudent.length ) {
+    return res.status( 400 ).json( { error: 'Student does not exist' } )
+  }
+
+  await updateById( existingStudent[ 0 ].id, { isSuspended: true } )
+
+  return res.status( 204 ).send()
+} )
+
 export { 
   createStudent,
   getAllStudents,
   registerStudents,
-  getCommonStudents
+  getCommonStudents,
+  suspendStudentByEmail
 }

@@ -5,7 +5,8 @@ import {
   createStudent,
   getAllStudents,
   registerStudents,
-  getCommonStudents
+  getCommonStudents,
+  suspendStudentByEmail
 } from '../controllers/students.js'
 
 const router = Router()
@@ -16,5 +17,6 @@ router.route( '/students' )
 
 router.route( '/register' ).post( registerStudents )
 router.route( '/commonstudents' ).get( getCommonStudents )
+router.route( '/suspend' ).patch( suspendStudentByEmail )
 
 export default router
