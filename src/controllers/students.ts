@@ -32,9 +32,6 @@ interface RetrieveForNotificationsRequestDto {
   notification: string
 }
 
-// TODO: Add a helper fucntion to check if email is valid in util folder
-// TODO: Add helper function to handle encoded url params
-
 const createStudent = asyncWrapper( async ( req: Request< {}, {}, CreateStudentRequestDto >, res: Response ) => {
   const { name, email } = req.body
 

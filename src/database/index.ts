@@ -173,7 +173,6 @@ const connect = async () => {
     console.log( 'Database connected successfully' )
 
     // Initialize the schema
-    // TODO: Check if the schema is already initialized ( how to do this? )
     await initSchema()
 
     // Seed data
