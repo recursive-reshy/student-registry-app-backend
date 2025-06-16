@@ -2,7 +2,7 @@ import { Request, Response } from 'express'
 
 import asyncWrapper from '../middleware/asyncWrapper.js'
 
-import { getMentionedEmails } from '../utlis/index.js'
+import { getMentionedEmails } from '../utils.js'
 
 // Repository methods
 import { save, findAll, findByEmail, findByEmails, updateById } from '../repositories/students.js'
