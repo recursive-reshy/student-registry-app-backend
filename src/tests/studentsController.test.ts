@@ -12,7 +12,7 @@ import * as studentsRepository from '../repositories/students.js'
 import * as teachersRepository from '../repositories/teachers.js'
 import * as teacherStudentRegistrationRepository from '../repositories/teacherStudentRegistration.js'
 // Controller
-import { createStudent, registerStudents } from '../controllers/students.js'
+import { createStudent, registerStudents, getCommonStudents } from '../controllers/students.js'
 
 // Types 
 import type { Teacher, Student } from '../types'
@@ -185,5 +185,104 @@ describe( 'registerStudents', () => {
 
     expect( postResponse.statusCode ).toEqual( 204 )
 
+  } )
+} )
+
+describe( 'getCommonStudents', () => {
+
+  let mockFindTeachersByEmails: jest.MockedFunction< typeof teachersRepository.findByEmails >
+  let mockFindAllStudentEmailsByTeacherIds: jest.MockedFunction< typeof teacherStudentRegistrationRepository.findAllStudentEmailsByTeacherIds >
+
+  beforeEach( () => {
+    jest.clearAllMocks()
+    mockFindTeachersByEmails = jest.mocked( teachersRepository.findByEmails )
+    mockFindAllStudentEmailsByTeacherIds = jest.mocked( teacherStudentRegistrationRepository.findAllStudentEmailsByTeacherIds )
+  } )
+
+  test( 'should return 400 status code if no teacher is provided', async () => { 
+
+    const getRequest = createRequest( {
+      method: 'GET',
+      url: '/students/commonstudents'
+    } )
+    
+    const getResponse = createResponse()
+
+    await getCommonStudents( getRequest as Request, getResponse as Response, jest.fn() )
+
+    expect( getResponse.statusCode ).toEqual( 400 )
+    expect( getResponse._getJSONData() ).toEqual( { message: 'Teacher email is required' } )
+  } )
+
+  test( 'should return 400 status code if teacher does not exist', async () => {
+    const getRequest = createRequest( {
+      method: 'GET',
+      url: '/students/commonstudents',
+      query: {
+        teacher: [ 'john.doe@example.com', 'jane.doe@example.com' ]
+      }
+    } )
+
+    const getResponse = createResponse()
+
+    mockFindTeachersByEmails.mockResolvedValue( { results: [], fields: [] } )
+
+    await getCommonStudents( getRequest as Request, getResponse as Response, jest.fn() )
+
+    expect( getResponse.statusCode ).toEqual( 400 )
+    expect( getResponse._getJSONData() ).toEqual( { error: 'Teachers not found: john.doe@example.com, jane.doe@example.com' } )
+  } )
+
+  test( 'should return 200 with common students', async () => {
+
+    const mockTeachers: Teacher[] = [
+      { id: '1',
+        name: 'John Doe',
+        email: 'john.doe@example.com',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      { id: '2',
+        name: 'Jane Doe',
+        email: 'jane.doe@example.com',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ]
+
+    const mockStudents: Student[] = [
+      { id: '1',
+        name: 'Luke Skywalker',
+        email: 'luke.skywalker@example.com',
+        isSuspended: false,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      { id: '2',
+        name: 'Leia Organa',
+        email: 'leia.organa@example.com',
+        isSuspended: false,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ]
+
+    const getRequest = createRequest( {
+      method: 'GET',
+      url: '/students/commonstudents',
+      query: {
+        teacher: [ 'john.doe@example.com', 'jane.doe@example.com' ]
+      }
+    } )
+
+    const getResponse = createResponse()
+
+    mockFindTeachersByEmails.mockResolvedValue( { results: mockTeachers, fields: [] } )
+    mockFindAllStudentEmailsByTeacherIds.mockResolvedValue( { results: mockStudents.map( ( student ) => ( { email: student.email } ) ), fields: [] } )
+
+    await getCommonStudents( getRequest as Request, getResponse as Response, jest.fn() )
+
+    expect( getResponse.statusCode ).toEqual( 200 )
+    expect( getResponse._getJSONData() ).toEqual( { students: mockStudents.map( ( student ) => student.email ) } )
   } )
 } )
