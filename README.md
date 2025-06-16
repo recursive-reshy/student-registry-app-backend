@@ -138,6 +138,41 @@ Built with TypeScript and MySQL.
 - **Seed Data:** See [`src/database/schema/seedData.sql`](src/database/schema/seedData.sql)
 - Tables: `Teachers`, `Students`, `TeacherStudentRegistration`
 
+### Table Schemas
+
+#### Teachers
+| Column     | Type         | Description                        |
+|-----------|--------------|------------------------------------|
+| id        | CHAR(36)     | Primary key, UUID                  |
+| name      | VARCHAR(255) | Teacher's name                     |
+| email     | VARCHAR(255) | Teacher's email (unique)           |
+| createdAt | TIMESTAMP    | Creation timestamp                 |
+| updatedAt | TIMESTAMP    | Last update timestamp              |
+
+#### Students
+| Column      | Type         | Description                        |
+|-------------|--------------|------------------------------------|
+| id          | CHAR(36)     | Primary key, UUID                  |
+| name        | VARCHAR(255) | Student's name                     |
+| email       | VARCHAR(255) | Student's email (unique)           |
+| isSuspended | BOOLEAN      | Suspension status (default: false) |
+| createdAt   | TIMESTAMP    | Creation timestamp                 |
+| updatedAt   | TIMESTAMP    | Last update timestamp              |
+
+#### TeacherStudentRegistration
+Junction table to handle many to many relations between teachers and students
+| Column     | Type      | Description                                 |
+|------------|-----------|---------------------------------------------|
+| id         | CHAR(36)  | Primary key, UUID                           |
+| teacherId  | CHAR(36)  | Foreign key to Teachers(id)                 |
+| studentId  | CHAR(36)  | Foreign key to Students(id)                 |
+| createdAt  | TIMESTAMP | Creation timestamp                          |
+| updatedAt  | TIMESTAMP | Last update timestamp                       |
+| unique_teacher_student | (index) | Ensures unique teacher-student pairs |
+
+- `teacherId` and `studentId` are foreign keys with `ON DELETE CASCADE`.
+- Each teacher-student pair is unique.
+
 ## Development
 
 - TypeScript config: [`tsconfig.json`](tsconfig.json)
