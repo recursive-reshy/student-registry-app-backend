@@ -61,8 +61,67 @@ describe('createStudent', () => {
 } )
 
 describe( 'registerStudents', () => {
+
+  let mockFindTeacherByEmail: jest.MockedFunction< typeof teachersRepository.findByEmail >
+  let mockFindByEmails: jest.MockedFunction< typeof studentsRepository.findByEmails >
+  let mockFindByTeacherIdAndStudentId: jest.MockedFunction< typeof teacherStudentRegistrationRepository.findByTeacherIdAndStudentId >
+  let mockSaveTeacherStudentRegistration: jest.MockedFunction< typeof teacherStudentRegistrationRepository.save >
+
   beforeEach( () => {
     jest.clearAllMocks()
+    mockFindTeacherByEmail = jest.mocked( teachersRepository.findByEmail )
+    mockFindByEmails = jest.mocked( studentsRepository.findByEmails )
+    mockFindByTeacherIdAndStudentId = jest.mocked( teacherStudentRegistrationRepository.findByTeacherIdAndStudentId )
+    mockSaveTeacherStudentRegistration = jest.mocked( teacherStudentRegistrationRepository.save )
+  } )
+
+  test( 'should return 400 status code if teacher does not exist', async () => {
+    const postRequest = createRequest( {
+      method: 'POST',
+      url: '/students/register',
+      body: {
+        teacher: 'john.doe@example.com',
+        students: [ 'jane.doe@example.com', 'jane.smith@example.com' ]
+      }
+    } )
+
+    const postResponse = createResponse()
+
+    mockFindTeacherByEmail.mockResolvedValue( { results: [], fields: [] } )
+
+    await registerStudents( postRequest as Request, postResponse as Response, jest.fn() )
+
+    expect( postResponse.statusCode ).toEqual( 400 )
+    expect( postResponse._getJSONData() ).toEqual( { message: 'Teacher does not exist' } )
+  } )
+
+  test( 'should return 400 status code if no students are provided', async () => {
+
+    const mockTeacher: Teacher = {
+      id: '1',
+      name: 'John Doe',
+      email: 'john.doe@example.com',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+
+    const postRequest = createRequest( {
+      method: 'POST',
+      url: '/students/register',
+      body: {
+        teacher: 'john.doe@example.com',
+        students: []
+      }
+    } )
+
+    const postResponse = createResponse()
+
+    mockFindTeacherByEmail.mockResolvedValue( { results: [ mockTeacher ], fields: [] } )
+
+    await registerStudents( postRequest as Request, postResponse as Response, jest.fn() )
+
+    expect( postResponse.statusCode ).toEqual( 400 )
+    expect( postResponse._getJSONData() ).toEqual( { message: 'Students are required' } )
   } )
 
   test( 'should register students to a teacher and return 204 status code', async () => {
@@ -102,11 +161,6 @@ describe( 'registerStudents', () => {
     } )
 
     const postResponse = createResponse()
-
-    const mockFindTeacherByEmail = jest.mocked( teachersRepository.findByEmail )
-    const mockFindByEmails = jest.mocked( studentsRepository.findByEmails )
-    const mockFindByTeacherIdAndStudentId = jest.mocked( teacherStudentRegistrationRepository.findByTeacherIdAndStudentId )
-    const mockSaveTeacherStudentRegistration = jest.mocked( teacherStudentRegistrationRepository.save )
 
     mockFindTeacherByEmail.mockResolvedValue( { results: [ mockTeacher ], fields: [] } )
     mockFindByEmails.mockResolvedValue( { results: mockStudents, fields: [] } )
