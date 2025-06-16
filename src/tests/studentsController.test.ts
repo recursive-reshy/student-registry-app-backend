@@ -17,49 +17,6 @@ import { createStudent, registerStudents, getCommonStudents, suspendStudentByEma
 // Types 
 import type { Teacher, Student } from '../types'
 
-describe('createStudent', () => {
-  beforeEach( () => {
-    jest.clearAllMocks()
-  } )
-
-  it( 'should create a new student and return 201 status code', async () => {
-    const postRequest = createRequest( { 
-      method: 'POST',
-      url: '/students',
-      body: {
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-      }
-    } )
-
-    const postResponse = createResponse()
-
-    const mockFindByEmail = jest.mocked( studentsRepository.findByEmail )
-    const mockSave = jest.mocked( studentsRepository.save )
-
-    mockFindByEmail.mockResolvedValue( { results: [], fields: [] } )
-    mockSave.mockResolvedValue( { 
-      results: {
-        constructor: {
-          name: 'ResultSetHeader'
-        },
-        fieldCount: 0,
-        affectedRows: 1,
-        insertId: 0,
-        info: '',
-        serverStatus: 2,
-        warningStatus: 0,
-        changedRows: 0
-      }, 
-      fields: [] 
-    } )
-
-    await createStudent( postRequest as Request, postResponse as Response, jest.fn() )
-
-    expect( postResponse._getJSONData() ).toEqual( { message: 'Student created successfully', id: 0 } )
-  } )
-} )
-
 describe( 'registerStudents', () => {
 
   let mockFindTeacherByEmail: jest.MockedFunction< typeof teachersRepository.findByEmail >

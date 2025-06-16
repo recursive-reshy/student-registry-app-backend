@@ -99,6 +99,8 @@ const registerStudents = asyncWrapper( async ( req: Request< {}, {}, RegisterStu
 const getCommonStudents = asyncWrapper( async ( req: Request< {}, {}, {}, { teacher: string | string [] } >, res: Response ) => {
   const { teacher } = req.query
 
+  console.log( 'teacher', { teacher } )
+
   if( !teacher ) {
     return res.status( 400 ).json( { message: 'Teacher email is required' } )
   }
@@ -126,13 +128,13 @@ const suspendStudentByEmail = asyncWrapper( async ( req: Request< {}, {}, { stud
   const { student } = req.body
 
   if( !student ) {
-    return res.status( 400 ).json( { error: 'Student email is required' } )
+    return res.status( 400 ).json( { message: 'Student email is required' } )
   }
 
   const { results: existingStudent } = await findByEmail( student )
 
   if( !existingStudent.length ) {
-    return res.status( 400 ).json( { error: 'Student does not exist' } )
+    return res.status( 400 ).json( { message: 'Student does not exist' } )
   }
 
   await updateById( existingStudent[ 0 ].id, { isSuspended: true } )
@@ -167,7 +169,7 @@ const retrieveForNotifications = asyncWrapper( async ( req: Request< {}, {}, Ret
   // Remove duplicates
   const recipients = [ ...new Set( allRecipients ) ]
 
-  return res.status( 200 ).json( recipients )
+  return res.status( 200 ).json( { recipients } )
 } )
 
 export { 
