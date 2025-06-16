@@ -17,8 +17,9 @@
   "scripts": {
     "build": "tsc && npm run copy-sql",
     "test": "jest",
+    "test:watch": "jest --watch",
     "dev": "nodemon",
-    "start": "node dist/server.js",
+    "start": "node --env-file=.env dist/server.js",
     "copy-sql": "rm -rf dist/database/schema && cp -r src/database/schema dist/database/schema"
   },
   "dependencies": {
@@ -29,6 +30,7 @@
     "mysql2": "^3.14.1"
   },
   "devDependencies": {
+    "@tsconfig/node22": "^22.0.2",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/jest": "^29.5.14",
