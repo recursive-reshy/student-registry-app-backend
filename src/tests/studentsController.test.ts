@@ -12,7 +12,7 @@ import * as studentsRepository from '../repositories/students.js'
 import * as teachersRepository from '../repositories/teachers.js'
 import * as teacherStudentRegistrationRepository from '../repositories/teacherStudentRegistration.js'
 // Controller
-import { createStudent, registerStudents, getCommonStudents } from '../controllers/students.js'
+import { createStudent, registerStudents, getCommonStudents, suspendStudentByEmail } from '../controllers/students.js'
 
 // Types 
 import type { Teacher, Student } from '../types'
@@ -22,7 +22,7 @@ describe('createStudent', () => {
     jest.clearAllMocks()
   } )
 
-  test( 'should create a new student and return 201 status code', async () => {
+  it( 'should create a new student and return 201 status code', async () => {
     const postRequest = createRequest( { 
       method: 'POST',
       url: '/students',
@@ -75,7 +75,7 @@ describe( 'registerStudents', () => {
     mockSaveTeacherStudentRegistration = jest.mocked( teacherStudentRegistrationRepository.save )
   } )
 
-  test( 'should return 400 status code if teacher does not exist', async () => {
+  it( 'should return 400 status code if teacher does not exist', async () => {
     const postRequest = createRequest( {
       method: 'POST',
       url: '/students/register',
@@ -95,7 +95,7 @@ describe( 'registerStudents', () => {
     expect( postResponse._getJSONData() ).toEqual( { message: 'Teacher does not exist' } )
   } )
 
-  test( 'should return 400 status code if no students are provided', async () => {
+  it( 'should return 400 status code if no students are provided', async () => {
 
     const mockTeacher: Teacher = {
       id: '1',
@@ -124,7 +124,7 @@ describe( 'registerStudents', () => {
     expect( postResponse._getJSONData() ).toEqual( { message: 'Students are required' } )
   } )
 
-  test( 'should register students to a teacher and return 204 status code', async () => {
+  it( 'should register students to a teacher and return 204 status code', async () => {
 
     const mockTeacher: Teacher = {
       id: '1',
@@ -199,7 +199,7 @@ describe( 'getCommonStudents', () => {
     mockFindAllStudentEmailsByTeacherIds = jest.mocked( teacherStudentRegistrationRepository.findAllStudentEmailsByTeacherIds )
   } )
 
-  test( 'should return 400 status code if no teacher is provided', async () => { 
+  it( 'should return 400 status code if no teacher is provided', async () => { 
 
     const getRequest = createRequest( {
       method: 'GET',
@@ -214,7 +214,7 @@ describe( 'getCommonStudents', () => {
     expect( getResponse._getJSONData() ).toEqual( { message: 'Teacher email is required' } )
   } )
 
-  test( 'should return 400 status code if teacher does not exist', async () => {
+  it( 'should return 400 status code if teacher does not exist', async () => {
     const getRequest = createRequest( {
       method: 'GET',
       url: '/students/commonstudents',
@@ -233,7 +233,7 @@ describe( 'getCommonStudents', () => {
     expect( getResponse._getJSONData() ).toEqual( { error: 'Teachers not found: john.doe@example.com, jane.doe@example.com' } )
   } )
 
-  test( 'should return 200 with common students', async () => {
+  it( 'should return 200 with common students', async () => {
 
     const mockTeachers: Teacher[] = [
       { id: '1',
@@ -284,5 +284,95 @@ describe( 'getCommonStudents', () => {
 
     expect( getResponse.statusCode ).toEqual( 200 )
     expect( getResponse._getJSONData() ).toEqual( { students: mockStudents.map( ( student ) => student.email ) } )
+  } )
+} )
+
+describe( 'suspendStudentByEmail', () => { 
+
+  let mockFindByEmail: jest.MockedFunction< typeof studentsRepository.findByEmail >
+  let mockUpdateById: jest.MockedFunction< typeof studentsRepository.updateById >
+
+  beforeEach( () => {
+    jest.clearAllMocks()
+    mockFindByEmail = jest.mocked( studentsRepository.findByEmail )
+    mockUpdateById = jest.mocked( studentsRepository.updateById )
+  } )
+
+  it( 'should return 400 status code if no student is provided', async () => { 
+    const patchRequest = createRequest( {
+      method: 'PATCH',
+      url: '/students/suspend',
+      body: {
+      }
+    } )
+    
+    const patchResponse = createResponse()
+
+    await suspendStudentByEmail( patchRequest as Request, patchResponse as Response, jest.fn() )
+
+    expect( patchResponse.statusCode ).toEqual( 400 )
+    expect( patchResponse._getJSONData() ).toEqual( { message: 'Student email is required' } )
+  } )
+
+  it( 'should return 400 status code if student does not exist', async () => {
+    const patchRequest = createRequest( {
+      method: 'PATCH',
+      url: '/students/suspend',
+      body: {
+        student: 'john.doe@example.com'
+      }
+    } )
+
+    const patchResponse = createResponse()
+
+    mockFindByEmail.mockResolvedValue( { results: [], fields: [] } )
+
+    await suspendStudentByEmail( patchRequest as Request, patchResponse as Response, jest.fn() )
+
+    expect( patchResponse.statusCode ).toEqual( 400 )
+    expect( patchResponse._getJSONData() ).toEqual( { message: 'Student does not exist' } )
+  } )
+
+  it( 'should suspend a student and return 204 status code', async () => {
+
+    const mockStudent: Student = {
+      id: '1',
+      name: 'John Doe',
+      email: 'john.doe@example.com',
+      isSuspended: false,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+
+    const patchRequest = createRequest( {
+      method: 'PATCH',
+      url: '/students/suspend',
+      body: {
+        student: 'john.doe@example.com'
+      }
+    } )
+
+    const patchResponse = createResponse()
+
+    mockFindByEmail.mockResolvedValue( { results: [ mockStudent ], fields: [] } )
+    mockUpdateById.mockResolvedValue( { 
+      results: {
+        constructor: {
+          name: 'ResultSetHeader'
+        },
+        fieldCount: 0,
+        affectedRows: 1,
+        insertId: 0,
+        info: '',
+        serverStatus: 2,
+        warningStatus: 0,
+        changedRows: 0
+      }, 
+      fields: [] 
+    } )
+
+    await suspendStudentByEmail( patchRequest as Request, patchResponse as Response, jest.fn() )
+
+    expect( patchResponse.statusCode ).toEqual( 204 )
   } )
 } )
