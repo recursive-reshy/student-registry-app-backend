@@ -12,7 +12,7 @@ import * as studentsRepository from '../repositories/students.js'
 import * as teachersRepository from '../repositories/teachers.js'
 import * as teacherStudentRegistrationRepository from '../repositories/teacherStudentRegistration.js'
 // Controller
-import { createStudent, registerStudents, getCommonStudents, suspendStudentByEmail } from '../controllers/students.js'
+import { createStudent, registerStudents, getCommonStudents, suspendStudentByEmail, retrieveForNotifications } from '../controllers/students.js'
 
 // Types 
 import type { Teacher, Student } from '../types'
@@ -374,5 +374,138 @@ describe( 'suspendStudentByEmail', () => {
     await suspendStudentByEmail( patchRequest as Request, patchResponse as Response, jest.fn() )
 
     expect( patchResponse.statusCode ).toEqual( 204 )
+  } )
+} )
+
+describe( 'retrieveForNotifications', () => {
+
+  let mockFindTeacherByEmail: jest.MockedFunction< typeof teachersRepository.findByEmail >
+  let mockFindAllValidStudentEmailsByTeacherId: jest.MockedFunction< typeof teacherStudentRegistrationRepository.findAllValidStudentEmailsByTeacherId >
+  let mockFindByEmails: jest.MockedFunction< typeof studentsRepository.findByEmails >
+
+  beforeEach( () => {
+    jest.resetAllMocks()
+    mockFindTeacherByEmail = jest.mocked( teachersRepository.findByEmail )
+    mockFindAllValidStudentEmailsByTeacherId = jest.mocked( teacherStudentRegistrationRepository.findAllValidStudentEmailsByTeacherId )
+    mockFindByEmails = jest.mocked( studentsRepository.findByEmails )
+  } )
+
+  it( 'should return 400 status code if no teacher or notification is provided', async () => { 
+    const postRequest = createRequest( {
+      method: 'POST',
+      url: '/students/retrievefornotifications',
+      body: {
+      }
+    } )
+
+    const postResponse = createResponse()
+
+    await retrieveForNotifications( postRequest as Request, postResponse as Response, jest.fn() )
+
+    expect( postResponse.statusCode ).toEqual( 400 )
+    expect( postResponse._getJSONData() ).toEqual( { message: 'Teacher email and notification are required' } ) 
+  } )
+
+  it( 'should return 400 status code if teacher does not exist', async () => {
+    const postRequest = createRequest( {
+      method: 'POST',
+      url: '/students/retrievefornotifications',
+      body: {
+        teacher: 'john.doe@example.com',
+        notification: 'Hello, @jane.doe@example.com'
+      }
+    } )
+
+    const postResponse = createResponse()
+
+    mockFindTeacherByEmail.mockResolvedValue( { results: [], fields: [] } )
+
+    await retrieveForNotifications( postRequest as Request, postResponse as Response, jest.fn() )
+
+    expect( postResponse.statusCode ).toEqual( 400 )
+    expect( postResponse._getJSONData() ).toEqual( { message: 'Teacher does not exist' } )
+  } )
+
+  it( 'should return 200 with valid recipients', async () => {
+
+    const mockTeacher: Teacher = {
+      id: '1',
+      name: 'John Doe',
+      email: 'john.doe@example.com',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+
+    const mockStudentsEmails: Record< string, string >[] = [
+      { email: 'luke.skywalker@example.com' },
+      { email: 'leia.organa@example.com' }
+    ]
+
+    const postRequest = createRequest( {
+      method: 'POST',
+      url: '/students/retrievefornotifications',
+      body: {
+        teacher: 'john.doe@example.com',
+        notification: 'Hey everybody'
+      }
+    } )
+
+    const postResponse = createResponse()
+
+    mockFindTeacherByEmail.mockResolvedValue( { results: [ mockTeacher ], fields: [] } )
+    mockFindAllValidStudentEmailsByTeacherId.mockResolvedValue( { results: mockStudentsEmails, fields: [] } )
+
+    await retrieveForNotifications( postRequest as Request, postResponse as Response, jest.fn() )
+
+    expect( postResponse.statusCode ).toEqual( 200 )
+    expect( postResponse._getJSONData() ).toEqual( { recipients: mockStudentsEmails.map( ( student ) => student.email ) } )
+  } )
+
+  it( 'should return 200 with valid recipients with mentioned emails', async () => {
+
+    const mockTeacher: Teacher = {
+      id: '1',
+      name: 'John Doe',
+      email: 'john.doe@example.com',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+
+    const mockStudentsEmails: Record< string, string >[] = [
+      { email: 'luke.skywalker@example.com' },
+      { email: 'leia.organa@example.com' }
+    ]
+
+    const mockMentionedStudents: Student[] = [
+      { id: '1',
+        name: 'Han Solo',
+        email: 'han.solo@example.com',
+        isSuspended: false,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ]
+
+    const postRequest = createRequest( {
+      method: 'POST',
+      url: '/students/retrievefornotifications',
+      body: {
+        teacher: 'john.doe@example.com',
+        notification: 'Hey everybody! @han.solo@example.com'
+      }
+    } )
+
+    const postResponse = createResponse()
+
+    mockFindTeacherByEmail.mockResolvedValue( { results: [ mockTeacher ], fields: [] } )
+    mockFindAllValidStudentEmailsByTeacherId.mockResolvedValue( { results: mockStudentsEmails, fields: [] } )
+    mockFindByEmails.mockResolvedValue( { results: mockMentionedStudents, fields: [] } )
+    
+    await retrieveForNotifications( postRequest as Request, postResponse as Response, jest.fn() )
+
+    expect( postResponse.statusCode ).toEqual( 200 )
+    expect( postResponse._getJSONData() ).toEqual( { 
+      recipients: [ ...mockStudentsEmails.map( ( student ) => student.email ), 'han.solo@example.com' ] 
+    } )
   } )
 } )
